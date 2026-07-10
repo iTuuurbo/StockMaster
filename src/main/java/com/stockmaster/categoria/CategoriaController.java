@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.stockmaster.producto.Producto;
+
 
 
 @Controller
@@ -58,7 +60,7 @@ public class CategoriaController {
 	public String registrar(Categoria categoria, RedirectAttributes redirect) {
 		try {
 			categoriaService.registrar(categoria);
-			redirect.addFlashAttribute("exito", "Categoria registrada correctamente.");
+			redirect.addFlashAttribute("success", "Categoria registrada correctamente.");
 			return "redirect:/categorias/lista";
 		} catch (Exception e) {
 			redirect.addFlashAttribute("error", "Error al guardar la categoria");
@@ -66,13 +68,18 @@ public class CategoriaController {
 		}
 	}
 	
-	// Procesa el formulario y actualiza una categoría existente
-	@PostMapping("/actualizar")
-	public String actualizar(Categoria categoria, RedirectAttributes redirect) {
-		categoriaService.actualizar(categoria);
-		redirect.addFlashAttribute("msj", "Categoria actualizada correctamente");
-		return "redirect:/categorias/lista";
-	}
+	// Procesa el formulario y actualiza la categoria seleccionada
+		@PostMapping("/actualizar")
+		public String actualizar(Categoria categoria, RedirectAttributes redirect) {
+			try {
+				categoriaService.actualizar(categoria);
+				redirect.addFlashAttribute("success", "Categoria actualizada correctamente");
+				return "redirect:/categorias/lista";
+			} catch (Exception e) {
+				redirect.addFlashAttribute("error", "Error al actualizar la categoria");
+				return "redirect:/categorias/lista";
+			}
+		}
 	
 	// Obtiene la categoría según su ID
 	@GetMapping("/buscar/{id}")
@@ -85,7 +92,7 @@ public class CategoriaController {
 	@GetMapping("/desactivar/{id}")
 	public String desactivar(@PathVariable Long id, RedirectAttributes redirect) {
 		categoriaService.desactivar(id);
-		redirect.addFlashAttribute("msj", "Categoria desactivada correctamente.");
+		redirect.addFlashAttribute("success", "Categoria desactivada correctamente.");
 		return "redirect:/categorias/lista";
 	}
 

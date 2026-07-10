@@ -55,13 +55,13 @@
 		</div>
 
 		<!-- Alertas Bootstrap (controladas por backend con th:if) -->
-		<div id="msjExito" th:if="${exito}" class="alert alert-success alert-dismissible fade show" role="alert">
+		<div id="success" th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
 			<i class="bi bi-check-circle-fill me-2"></i>
-			<span th:text="${exito}"></span>
+			<span th:text="${success}"></span>
 			<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 		</div>
 
-		<div id="msjError" th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+		<div id="error" th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
 			<i class="bi bi-exclamation-triangle-fill me-2"></i>
 			<span th:text="${error}"></span>
 			<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -316,6 +316,7 @@
 			document.getElementById('tituloModal').innerText = 'Registrar Categoría';
 			document.getElementById('frmCategoria').reset();
 			document.getElementById('id').value = '';
+			document.getElementById("frmCategoria").action="/categorias/registrar";
 		}
 
 		// Llena el modal con los datos de la fila seleccionada para EDITAR
@@ -324,6 +325,7 @@
 			document.getElementById('id').value = btn.dataset.id;
 			document.getElementById('nombre').value = btn.dataset.nombre;
 			document.getElementById('estado').value = btn.dataset.estado;
+			document.getElementById("frmCategoria").action="/categorias/actualizar";
 		}
 
 		// Prepara el modal de eliminación con el id y nombre de la categoría seleccionada
@@ -335,7 +337,7 @@
 
 	<script>
 		setTimeout(function() {
-			let mensaje = document.getElementById("msjExito");
+			let mensaje = document.getElementById("success");
 			if (mensaje) {
 				let alerta = new bootstrap.Alert(mensaje);
 				alerta.close();
@@ -345,7 +347,7 @@
 
 	<script>
 		setTimeout(function() {
-			let mensaje = document.getElementById("msjError");
+			let mensaje = document.getElementById("error");
 			if (mensaje) {
 				let alerta = new bootstrap.Alert(mensaje);
 				alerta.close();

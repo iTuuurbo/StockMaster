@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>StockMaster | Gestión de Productos</title>
+
+	<!-- Bootstrap 5 -->
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+	<!-- Bootstrap Icons -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+	<!-- DataTables -->
+	<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+
+	<style>
+		body {
+			background-color: #f4f6f9;
+		}
+
+		.card-header-custom {
+			background-color: #ffffff;
+			border-bottom: 1px solid #e9ecef;
+		}
+
+		.table thead th {
+			white-space: nowrap;
+		}
+	</style>
+</head>
+
+<body>
+
+	<!-- ============================================================= -->
+	<!-- CONTENEDOR PRINCIPAL -->
+	<!-- ============================================================= -->
+	<div class="container-fluid py-4">
+
+		<!-- Encabezado de la página -->
+		<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+			<div>
+				<h3 class="fw-bold mb-0">
+					<i class="bi bi-collection-fill text-primary me-2"></i>Gestión de Productos
+				</h3>
+				<p class="text-muted mb-0">Administra los productos del sistema</p>
+			</div>
+			<button id="btnNuevo" class="btn btn-primary mt-2 mt-md-0" data-bs-toggle="modal"
+				data-bs-target="#modalProducto" onclick="prepararRegistro()">
+				<i class="bi bi-plus-circle me-1"></i>
+				Nuevo Producto
+			</button>
+		</div>
+
+		<!-- Alertas Bootstrap (controladas por backend con th:if) -->
+		<div id="success" th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+			<i class="bi bi-check-circle-fill me-2"></i>
+			<span th:text="${success}"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+		</div>
+
+		<div id="error" th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+			<i class="bi bi-exclamation-triangle-fill me-2"></i>
+			<span th:text="${error}"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+		</div>
+
+		<!-- Tarjetas de resumen -->
+		<div class="row g-3 mb-4">
+			<div class="col-12 col-sm-6 col-lg-3">
+				<div class="card shadow-sm border-0 h-100">
+					<div class="card-body d-flex align-items-center">
+						<div class="rounded-circle bg-primary bg-opacity-10 p-3 me-3">
+							<i class="bi bi-collection text-primary fs-4"></i>
+						</div>
+						<div>
+							<p class="text-muted mb-0 small">Total de Productos</p>
+							<h5 class="fw-bold mb-0" th:text="${totalProductos}">0</h5>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-12 col-sm-6 col-lg-3">
+				<div class="card shadow-sm border-0 h-100">
+					<div class="card-body d-flex align-items-center">
+						<div class="rounded-circle bg-success bg-opacity-10 p-3 me-3">
+							<i class="bi bi-check2-circle text-success fs-4"></i>
+						</div>
+						<div>
+							<p class="text-muted mb-0 small">Productos Activos</p>
+							<h5 class="fw-bold mb-0" th:text="${totalActivos}">0</h5>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-12 col-sm-6 col-lg-3">
+				<div class="card shadow-sm border-0 h-100">
+					<div class="card-body d-flex align-items-center">
+						<div class="rounded-circle bg-secondary bg-opacity-10 p-3 me-3">
+							<i class="bi bi-slash-circle text-secondary fs-4"></i>
+						</div>
+						<div>
+							<p class="text-muted mb-0 small">Productos Inactivos</p>
+							<h5 class="fw-bold mb-0" th:text="${totalInactivos}">0</h5>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-12 col-sm-6 col-lg-3">
+				<div class="card shadow-sm border-0 h-100">
+					<div class="card-body d-flex align-items-center">
+						<div class="rounded-circle bg-info bg-opacity-10 p-3 me-3">
+							<i class="bi bi-box-seam text-info fs-4"></i>
+						</div>
+						<div>
+							<p class="text-muted mb-0 small">Categorias Asociadas</p>
+							<h5 class="fw-bold mb-0" th:text="${totalCategoriasAsociados}">0</h5>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Card principal con la tabla -->
+		<div class="card shadow-sm border-0">
+			<div class="card-header card-header-custom d-flex justify-content-between align-items-center py-3">
+				<h6 class="mb-0 fw-bold">
+					<i class="bi bi-table me-1"></i> Listado de Productos
+				</h6>
+			</div>
+			<div class="card-body">
+				<div class="table-responsive">
+					<table id="tablaProductos" class="table table-hover align-middle w-100">
+						<thead class="table-light">
+							<tr>
+								<th>#</th>
+								<th>Codigo</th>
+								<th>Nombre</th>
+								<th>Stock</th>
+								<th>Precio</th>
+								<th>Categoria</th>
+								<th>Estado</th>
+								
+								<th class="text-center">Acciones</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr th:each="producto : ${productos}">
+								<td th:text="${producto.id}"></td>
+								<td th:text="${producto.codigo}"></td>
+								<td th:text="${producto.nombre}"></td>
+								<td th:text="${producto.stock}"></td>
+								<td th:text="${producto.precio}"></td>
+								<td th:text="${producto.categoria.nombre}"></td>
+								<td>
+									<span class="badge rounded-pill"
+										th:classappend="${producto.estado} == 'ACTIVO' ? 'bg-success' : 'bg-danger'"
+										th:text="${producto.estado} == 'ACTIVO' ? 'ACTIVO' : 'INACTIVO'">
+										Estado
+									</span>
+								</td>
+								<td class="text-center">
+									<!-- Editar: abre el MISMO modal y lo llena con los data-* de esta fila -->
+									<button type="button" 
+									        class="btn btn-sm btn-outline-primary me-1" 
+									        title="Actualizar"
+									        data-bs-toggle="modal" 
+									        data-bs-target="#modalProducto"
+									        th:data-id="${producto.id}" 
+									        th:data-codigo="${producto.codigo}" 
+									        th:data-nombre="${producto.nombre}"
+									        th:data-stock="${producto.stock}" 
+									        th:data-precio="${producto.precio}" 
+									        th:data-categoria-id="${producto.categoria != null ? producto.categoria.id : ''}" 
+									        th:data-estado="${producto.estado}"
+									        onclick="prepararEdicion(this)">
+									    <i class="bi bi-pencil-square"></i>
+									</button>
+
+									<!-- Eliminar: usa data-* en vez de concatenar strings, evita romperse con comillas -->
+									<button type="button" 
+									        class="btn btn-sm btn-outline-danger" 
+									        title="Eliminar"
+									        data-bs-toggle="modal" 
+									        data-bs-target="#modalEliminar"
+									        th:data-id="${producto.id}" 
+									        th:data-nombre="${producto.nombre}"
+									        onclick="prepararEliminacion(this)">
+									    <i class="bi bi-trash3"></i>
+									</button>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+	<!-- ============================================================= -->
+	<!-- MODAL: Confirmación de Eliminación -->
+	<!-- ============================================================= -->
+	<div class="modal fade" id="modalEliminar" tabindex="-1" aria-labelledby="modalEliminarLabel" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="modalEliminarLabel">
+						<i class="bi bi-exclamation-triangle-fill text-danger me-1"></i>Confirmar Eliminación
+					</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<p class="mb-0">
+						¿Está seguro de que desea eliminar el producto
+						<strong id="nombreProductoEliminar"></strong>? Esta acción no se puede deshacer.
+					</p>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+						<i class="bi bi-x-lg me-1"></i>Cancelar
+					</button>
+					<a id="linkEliminarProducto" href="#" class="btn btn-danger">
+						<i class="bi bi-trash3 me-1"></i>Eliminar
+					</a>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- =========================
+	     MODAL: Registrar / Editar
+	========================== -->
+	<div class="modal fade" id="modalProducto" tabindex="-1" aria-labelledby="modalProductoiaLabel" aria-hidden="true">
+
+		<div class="modal-dialog modal-dialog-centered">
+
+			<div class="modal-content">
+
+				<form id="frmProducto" th:action="@{/productos/registrar}" method="post">
+
+					<!-- ID oculto: viaja en el submit gracias a name="id" -->
+					<input type="hidden" id="id" name="id">
+
+					<div class="modal-header">
+						<h5 class="modal-title" id="modalProductoLabel">
+							<i class="bi bi-collection me-1"></i>
+							<span id="tituloModal">Registrar Producto</span>
+						</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+
+					<div class="modal-body">
+
+						<div class="mb-3">
+							<label class="form-label" for="codigo">Codigo</label>
+							<div class="input-group">
+								<span class="input-group-text"><i class="bi bi-tag"></i></span>
+								<input id="codigo" name="codigo" type="text" class="form-control"
+									placeholder="Ej: PRO001" required>
+							</div>
+						</div>
+
+						<div class="mb-3">
+							<label class="form-label" for="nombre">Nombre</label>
+							<div class="input-group">
+								<span class="input-group-text"><i class="bi bi-tag"></i></span>
+								<input id="nombre" name="nombre" type="text" class="form-control"
+									placeholder="Ej: Fanta" required>
+							</div>
+						</div>
+
+						<div class="mb-3">
+							<label class="form-label" for="stock">Stock</label>
+							<div class="input-group">
+								<span class="input-group-text"><i class="bi bi-tag"></i></span>
+								<input id="stock" name="stock" type="text" class="form-control" placeholder="0"
+									required>
+							</div>
+						</div>
+
+						<div class="mb-3">
+							<label class="form-label" for="precio">Precio</label>
+							<div class="input-group">
+								<span class="input-group-text"><i class="bi bi-tag"></i></span>
+								<input id="precio" name="precio" type="text" class="form-control" placeholder="00.00"
+									required>
+							</div>
+						</div>
+
+						<div class="mb-1">
+						    <label class="form-label" for="categoria">Categoría</label>
+						    <div class="input-group">
+						        <span class="input-group-text"><i class="bi bi-tags"></i></span> <!-- Icono cambiado a tags por ser más lógico -->
+						        
+						        <!-- ✅ CORRECCIÓN: Enlazar al OBJETO, no al ID -->
+						        <select id="categoria" 
+						                class="form-select" 
+						                th:field="*{producto.categoria}"> <!-- Quita .id -->
+						            
+						            <option value="">Seleccione Categoría</option> <!-- value vacío o null -->
+						            
+						            <option th:each="c : ${categorias}" 
+						                    th:value="${c.id}" 
+						                    th:text="${c.nombre}">
+						            </option>
+						        </select>
+						    </div>
+						</div>
+
+
+						<div class="mb-1">
+							<label class="form-label" for="estado">Estado</label>
+							<div class="input-group">
+								<span class="input-group-text"><i class="bi bi-toggle2-on"></i></span>
+								<select id="estado" name="estado" class="form-select">
+									<option value="ACTIVO">ACTIVO</option>
+									<option value="INACTIVO">INACTIVO</option>
+								</select>
+							</div>
+						</div>
+
+					</div>
+
+					<div class="modal-footer">
+						<button class="btn btn-outline-secondary" data-bs-dismiss="modal" type="button">
+							<i class="bi bi-x-lg me-1"></i>Cerrar
+						</button>
+						<button class="btn btn-primary" type="submit">
+							<i class="bi bi-save me-1"></i>Guardar
+						</button>
+					</div>
+
+				</form>
+
+			</div>
+
+		</div>
+
+	</div>
+
+	<!-- ============================================================= -->
+	<!-- SCRIPTS -->
+	<!-- ============================================================= -->
+	<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+	<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+	<script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+
+	<script th:inline="javascript">
+		$(document).ready(function () {
+			$('#tablaProductos').DataTable({
+				language: {
+					url: 'https://cdn.datatables.net/plug-ins/1.13.8/i18n/es-ES.json'
+				},
+				responsive: true
+			});
+		});
+
+		// Deja el modal listo para REGISTRAR una nueva categoría (limpia el formulario)
+		function prepararRegistro() {
+			document.getElementById('tituloModal').innerText = 'Registrar Producto';
+			document.getElementById('frmProducto').reset();
+			document.getElementById('id').value = '';
+			document.getElementById("frmProducto").action="/productos/registrar";
+		}
+
+		// Llena el modal con los datos de la fila seleccionada para EDITAR
+		function prepararEdicion(btn) {
+		    // 1. Obtener datos del botón
+		    const id = btn.getAttribute('data-id');
+		    const codigo = btn.getAttribute('data-codigo');
+		    const nombre = btn.getAttribute('data-nombre');
+		    const stock = btn.getAttribute('data-stock');
+		    const precio = btn.getAttribute('data-precio');
+		    const categoriaId = btn.getAttribute('data-categoria-id'); // ¡El ID de la categoría!
+		    const estado = btn.getAttribute('data-estado');
+			document.getElementById("frmProducto").action="/productos/actualizar";
+
+		    // 2. Llenar los campos del formulario (asegúrate que los ID coincidan con tu HTML)
+		    document.getElementById('id').value = id;
+		    document.getElementById('codigo').value = codigo;
+		    document.getElementById('nombre').value = nombre;
+		    document.getElementById('stock').value = stock;
+		    document.getElementById('precio').value = precio;
+		    document.getElementById('estado').value = estado;
+
+		    // 3. SELECCIONAR LA CATEGORÍA EN EL DROPDOWN
+		    // Esto es crucial: el select debe tener el valor igual al ID que pasamos
+		    const selectCategoria = document.getElementById('categoria'); 
+		    if (selectCategoria) {
+		        selectCategoria.value = categoriaId; // Thymeleaf ya puso value="${c.id}" en las opciones
+		    }
+
+		    // 4. Cambiar el título del modal (opcional)
+		    document.getElementById('tituloModal').innerText = 'Editar Producto';
+		}
+
+		// Prepara el modal de eliminación con el id y nombre de la categoría seleccionada
+		function prepararEliminacion(btn) {
+			document.getElementById('nombreProductoEliminar').innerText = btn.dataset.nombre;
+			document.getElementById('linkEliminarProducto').setAttribute('href', '/productos/desactivar/' + btn.dataset.id);
+		}
+	</script>
+
+	<script>
+		setTimeout(function () {
+			let mensaje = document.getElementById("success");
+			if (mensaje) {
+				let alerta = new bootstrap.Alert(mensaje);
+				alerta.close();
+			}
+		}, 3000);
+	</script> 
+
+	<script>
+		setTimeout(function () {
+			let mensaje = document.getElementById("error");
+			if (mensaje) {
+				let alerta = new bootstrap.Alert(mensaje);
+				alerta.close();
+			}
+		}, 3000);
+	</script>
+
+</body>
+
+</html>

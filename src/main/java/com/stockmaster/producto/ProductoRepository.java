@@ -1,5 +1,7 @@
 package com.stockmaster.producto;
 
-public interface ProductoRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface ProductoRepository extends JpaRepository<Producto, Long>{
 
 }
